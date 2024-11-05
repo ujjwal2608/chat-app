@@ -35,10 +35,16 @@ const AuthScreen = ({ navigation }) => {
       } ;
       
       const response = await axios.post(`${BASE_URL}${endpoint}`, requestData);
-
-      if (response.data.token) {
-        await AsyncStorage.setItem('token', response.data.token);
-        router.replace('/home/HomeScreen');
+      if (isLogin) {
+        // If login is successful
+        if (response.data.token) {
+          await AsyncStorage.setItem('token', response.data.token);
+          router.replace('/home/HomeScreen');
+        }
+      } else {
+        // Registration was successful, switch to login mode
+        Alert.alert('Success', 'Registration successful. Please log in.');
+        setIsLogin(true);
       }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || console.log(error));
