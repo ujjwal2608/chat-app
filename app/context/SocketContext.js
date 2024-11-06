@@ -12,12 +12,11 @@ export const SocketContextProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
-console.log(authUser)
   useEffect(() => {
     if (authUser) {
-      const socket = io('http://localhost:4000', {
+      const socket = io('https://chat-app-backend-tl4j.onrender.com', {
         query: {
-          userId: authUser._id,
+          userId: authUser.userId,
         },
       });
 
