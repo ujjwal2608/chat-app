@@ -23,9 +23,9 @@ console.log("the userId is ",userId)
         return;
       }
       try {
-        const response = await axios.get(`http://localhost:4000/messages/${userId}`, {
+        const response = await axios.get(`https://chat-app-backend-tl4j.onrender.com/messages/${userId}`, {
           headers: {
-            Authorization: `Bearer ${authUser}`, // Include token in headers
+            Authorization: `Bearer ${authUser.token}`, // Include token in headers
           },
         });
         console.log(response.data)

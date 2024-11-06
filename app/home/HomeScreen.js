@@ -13,6 +13,7 @@ const HomeScreen = () => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('userId');
     setAuthUser(null); // Reset authUser in context
     router.replace('/auth/AuthScreen');
   };
@@ -26,24 +27,25 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      try {
-        const response = await axios.get(`http://localhost:4000/users`, {
-          headers: {
-            Authorization: `Bearer ${authUser}`, // Send token in headers
-          },
-        });
-        setUsers(response.data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
+      if (authUser?.token) {
+        try {
+          const response = await axios.get(`https://chat-app-backend-tl4j.onrender.com/users`, {
+            headers: {
+              Authorization: `Bearer ${authUser.token}`, // Send token in headers
+            },
+          });
+          setUsers(response.data);
+        } catch (error) {
+          console.error('Error fetching users:', error);
+          Alert.alert('Error', 'Failed to fetch users. Please try again later.');
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
-    if (authUser) {
-      fetchUsers(); // Only fetch users if authUser (token) exists
-    }
-  }, [authUser]);
+    fetchUsers(); // Fetch users on component mount if authUser is available
+  }, [authUser?.token]);
 
   return (
     <View style={styles.container}>

@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Yup from 'yup';
 import { useAuthContext } from '../context/AuthContext';
-const BASE_URL = 'https://chat-app-backend-tl4j.onrender.com/';
+const BASE_URL = 'https://chat-app-backend-tl4j.onrender.com';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().when('isLogin', {
@@ -36,14 +36,17 @@ const AuthScreen = ({ navigation }) => {
             phoneNumber: values.phoneNumber,
             password: values.password,
           };
-
+console.log(`${BASE_URL}${endpoint}`)
       const response = await axios.post(`${BASE_URL}${endpoint}`, requestData);
       if (isLogin) {
         // If login is successful
         if (response.data.token) {
-
-          await AsyncStorage.setItem('token', response.data.token);
-          setAuthUser(response.data.token); // Set token in AuthContext
+const token = response.data.token
+const userId = response.data.data._id
+       
+          await AsyncStorage.setItem('token', token);
+          await AsyncStorage.setItem('userId', userId);
+          setAuthUser({ token, userId });
           router.replace('/home/HomeScreen');
         }
       } else {
