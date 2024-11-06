@@ -43,7 +43,7 @@ console.log(`${BASE_URL}${endpoint}`)
         if (response.data.token) {
 const token = response.data.token
 const userId = response.data.data._id
-       
+       console.log(token)
           await AsyncStorage.setItem('token', token);
           await AsyncStorage.setItem('userId', userId);
           setAuthUser({ token, userId });
