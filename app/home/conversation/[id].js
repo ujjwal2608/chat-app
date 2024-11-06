@@ -85,7 +85,7 @@ const ConversationScreen = () => {
   return (
     <View style={styles.container}>
       <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
-      <Button title="Send" onPress={sendMessage} />
+      <Button title="Send"  onPress={sendMessage} />
       {/* <Text>{userId}</Text> */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
