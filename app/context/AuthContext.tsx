@@ -43,7 +43,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     loadAuthUser();
-  }, []);
+  });
 
   // Optionally, display a loading indicator until the token is loaded
   if (loading) {
