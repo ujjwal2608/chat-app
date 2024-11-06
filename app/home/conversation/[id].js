@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, StyleSheet,Button, ActivityIndicator, TextInput } from 'react-native';
 import axios from 'axios';
 import { useAuthContext } from '../../context/AuthContext';
@@ -13,6 +13,8 @@ const ConversationScreen = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
+
+  const flatListRef = useRef(null);
   console.log('the userId is ', userId);
   useEffect(() => {
     const fetchMessages = async () => {
@@ -59,6 +61,16 @@ const ConversationScreen = () => {
     }
   }, [socket, userId, setMessages]); // Dependency array includes userId and authUser
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (flatListRef.current) {
+        flatListRef.current.scrollToEnd({ animated: true });
+      }
+    }, 100); // Add a short delay to ensure all content is rendered
+
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
+
   const sendMessage = async () => {
     const messageData = {
       senderId: authUser.userId,
@@ -84,13 +96,13 @@ const ConversationScreen = () => {
 
   return (
     <View style={styles.container}>
-      <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
-      <Button title="Send"  onPress={sendMessage} />
+      
       {/* <Text>{userId}</Text> */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
+        ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item._id} // Adjust based on your message ID structure
           renderItem={({ item }) => (
@@ -101,8 +113,17 @@ const ConversationScreen = () => {
               </Text>
             </View>
           )}
+          getItemLayout={(data, index) => ({ length: 80, offset: 80 * index, index })} // Assumes item height is 80
+          onContentSizeChange={() => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }}
         />
+        
       )}
+      <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
+      <Button title="Send"  onPress={sendMessage} />
     </View>
   );
 };
