@@ -1,14 +1,49 @@
+import React, { useEffect, useState, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { useAuthContext } from '../context/AuthContext';
 
-const HomeScreen = ({ navigation }) => {
-    const router = useRouter();
+const HomeScreen = () => {
+  const { authUser, setAuthUser } = useAuthContext(); // Access token from context
+  const router = useRouter();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const handleLogout = async () => {
     await AsyncStorage.removeItem('token');
+    setAuthUser(null); // Reset authUser in context
     router.replace('/auth/AuthScreen');
   };
+
+  const navigateToConversation = (user) => {
+    router.push({
+      pathname: `/home/conversation/${user._id}`,
+      params: { userId: user._id },
+    });
+  };
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/users`, {
+          headers: {
+            Authorization: `Bearer ${authUser}`, // Send token in headers
+          },
+        });
+        setUsers(response.data);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (authUser) {
+      fetchUsers(); // Only fetch users if authUser (token) exists
+    }
+  }, [authUser]);
 
   return (
     <View style={styles.container}>
@@ -16,6 +51,25 @@ const HomeScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
+      <View>
+        {loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        ) : (
+          <FlatList
+            data={users}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => navigateToConversation(item)}>
+                <View style={styles.userItem}>
+                  <Text style={styles.userName}>{item.name}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        )}
+      </View>
     </View>
   );
 };
@@ -42,6 +96,17 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  loaderContainer: {
+    marginTop: 20,
+  },
+  userItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  userName: {
+    fontSize: 18,
   },
 });
 

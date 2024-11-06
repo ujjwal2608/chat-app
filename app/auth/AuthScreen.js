@@ -5,8 +5,8 @@ import { Formik } from 'formik';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Yup from 'yup';
-
-const BASE_URL = 'http://localhost:4000';
+import { useAuthContext } from '../context/AuthContext';
+const BASE_URL = 'https://chat-app-backend-tl4j.onrender.com/';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().when('isLogin', {
@@ -22,23 +22,28 @@ const validationSchema = Yup.object().shape({
 const AuthScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
   const router = useRouter();
+  const { setAuthUser } = useAuthContext();
   const handleSubmit = async (values) => {
     try {
       const endpoint = isLogin ? '/login' : '/register';
-      const requestData = isLogin ? {
-        phoneNumber: values.phoneNumber,
-        password: values.password
-      } : {
-        name: values.name,
-        phoneNumber: values.phoneNumber,
-        password: values.password,
-      } ;
-      
+      const requestData = isLogin
+        ? {
+            phoneNumber: values.phoneNumber,
+            password: values.password,
+          }
+        : {
+            name: values.name,
+            phoneNumber: values.phoneNumber,
+            password: values.password,
+          };
+
       const response = await axios.post(`${BASE_URL}${endpoint}`, requestData);
       if (isLogin) {
         // If login is successful
         if (response.data.token) {
+
           await AsyncStorage.setItem('token', response.data.token);
+          setAuthUser(response.data.token); // Set token in AuthContext
           router.replace('/home/HomeScreen');
         }
       } else {
