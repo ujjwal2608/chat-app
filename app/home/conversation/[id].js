@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet,Button, ActivityIndicator, TextInput } from 'react-native';
 import axios from 'axios';
 import { useAuthContext } from '../../context/AuthContext';
 import { useLocalSearchParams } from 'expo-router';
 import { useSocketContext } from '../../context/SocketContext';
 const ConversationScreen = () => {
-
-  
-  const {userId} =useLocalSearchParams()
-  const { socket } = useSocketContext(); 
-  console.log(userId)
+  const { userId } = useLocalSearchParams();
+  const { socket } = useSocketContext();
+  console.log(userId);
   //const { userId, userName } = route.params; // Assuming you're passing userId as a route parameter
   const { authUser } = useAuthContext(); // Get the token from AuthContext
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-console.log("the userId is ",userId)
+  const [newMessage, setNewMessage] = useState('');
+  console.log('the userId is ', userId);
   useEffect(() => {
     const fetchMessages = async () => {
       if (!userId || !authUser) {
@@ -23,12 +22,15 @@ console.log("the userId is ",userId)
         return;
       }
       try {
-        const response = await axios.get(`https://chat-app-backend-tl4j.onrender.com/messages/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${authUser.token}`, // Include token in headers
-          },
-        });
-        console.log(response.data)
+        const response = await axios.get(
+          `https://chat-app-backend-tl4j.onrender.com/messages/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authUser.token}`, // Include token in headers
+            },
+          }
+        );
+        console.log(response.data);
         setMessages(response.data);
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -39,14 +41,14 @@ console.log("the userId is ",userId)
 
     fetchMessages();
   }, [userId, authUser]);
-  
+
   useEffect(() => {
     // Listen for incoming messages from socket
     if (socket) {
-      console.log("socket")
+      console.log('socket');
 
       socket.on('newMessage', (newMessage) => {
-        console.log(newMessage)
+        console.log(newMessage);
         setMessages((prevMessages) => [...prevMessages, newMessage]); // Append the new message
       });
 
@@ -55,11 +57,36 @@ console.log("the userId is ",userId)
         socket.off('newMessage'); // Unsubscribe from event
       };
     }
-  }, [socket, userId,setMessages]);// Dependency array includes userId and authUser
+  }, [socket, userId, setMessages]); // Dependency array includes userId and authUser
+
+  const sendMessage = async () => {
+    const messageData = {
+      senderId: authUser.userId,
+      receiverId: userId,
+      message: newMessage,
+    }
+    try {
+      // Send to backend
+      await axios.post(`https://chat-app-backend-tl4j.onrender.com/messages/${userId}`, messageData, {
+        headers: {
+          Authorization: `Bearer ${authUser.token}`,
+        },
+      });
+      setNewMessage('');
+      setMessages((prevMessages) => [...prevMessages, messageData]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+   
+
+
+  };
 
   return (
     <View style={styles.container}>
-        {/* <Text>{userId}</Text> */}
+      <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
+      <Button title="Send"  onPress={sendMessage} />
+      {/* <Text>{userId}</Text> */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -68,11 +95,11 @@ console.log("the userId is ",userId)
           keyExtractor={(item) => item._id} // Adjust based on your message ID structure
           renderItem={({ item }) => (
             <View style={styles.messageItem}>
-            <Text style={styles.messageText}>{item.message}</Text>
-            <Text style={styles.timestampText}>
-              {new Date(item.createdAt).toLocaleString()} {/* Format timestamp */}
-            </Text>
-          </View>
+              <Text style={styles.messageText}>{item.message}</Text>
+              <Text style={styles.timestampText}>
+                {new Date(item.createdAt).toLocaleString()} {/* Format timestamp */}
+              </Text>
+            </View>
           )}
         />
       )}
