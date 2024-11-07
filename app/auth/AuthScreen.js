@@ -5,6 +5,7 @@ import { Formik } from 'formik';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Yup from 'yup';
+
 import { useAuthContext } from '../context/AuthContext';
 const BASE_URL = 'https://chat-app-backend-tl4j.onrender.com';
 
@@ -36,16 +37,19 @@ const AuthScreen = ({ navigation }) => {
             phoneNumber: values.phoneNumber,
             password: values.password,
           };
-console.log(`${BASE_URL}${endpoint}`)
+      console.log(`${BASE_URL}${endpoint}`);
       const response = await axios.post(`${BASE_URL}${endpoint}`, requestData);
       if (isLogin) {
         // If login is successful
         if (response.data.token) {
-const token = response.data.token
-const userId = response.data.data._id
-       console.log(token)
+          const token = response.data.token;
+          const userId = response.data.data._id;
+          const timeStamp = Date.now().toString();
+
+          console.log(token);
           await AsyncStorage.setItem('token', token);
           await AsyncStorage.setItem('userId', userId);
+          await AsyncStorage.setItem('timeStamp', timeStamp);
           setAuthUser({ token, userId });
           router.replace('/home/HomeScreen');
         }
