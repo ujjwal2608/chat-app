@@ -1,9 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, StyleSheet,Button, ActivityIndicator, TextInput } from 'react-native';
 import axios from 'axios';
-import { useAuthContext } from '../../context/AuthContext';
 import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Button,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
+
+import CustomKeyboardView from '../../../components/CustomKeyboardView';
+
 import { useSocketContext } from '../../context/SocketContext';
+import { useAuthContext } from '../../context/AuthContext';
+
 const ConversationScreen = () => {
   const { userId } = useLocalSearchParams();
   const { socket } = useSocketContext();
@@ -76,55 +88,60 @@ const ConversationScreen = () => {
       senderId: authUser.userId,
       receiverId: userId,
       message: newMessage,
-    }
+    };
     try {
       // Send to backend
-      await axios.post(`https://chat-app-backend-tl4j.onrender.com/messages/${userId}`, messageData, {
-        headers: {
-          Authorization: `Bearer ${authUser.token}`,
-        },
-      });
+      await axios.post(
+        `https://chat-app-backend-tl4j.onrender.com/messages/${userId}`,
+        messageData,
+        {
+          headers: {
+            Authorization: `Bearer ${authUser.token}`,
+          },
+        }
+      );
       setNewMessage('');
       setMessages((prevMessages) => [...prevMessages, messageData]);
     } catch (error) {
       console.error('Error sending message:', error);
     }
-   
-
-
   };
 
   return (
-    <View style={styles.container}>
-      
-      {/* <Text>{userId}</Text> */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <FlatList
-        ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item._id} // Adjust based on your message ID structure
-          renderItem={({ item }) => (
-            <View style={styles.messageItem}>
-              <Text style={styles.messageText}>{item.message}</Text>
-              <Text style={styles.timestampText}>
-                {new Date(item.createdAt).toLocaleString()} {/* Format timestamp */}
-              </Text>
-            </View>
-          )}
-          getItemLayout={(data, index) => ({ length: 80, offset: 80 * index, index })} // Assumes item height is 80
-          onContentSizeChange={() => {
-            setTimeout(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
-          }}
+    <CustomKeyboardView inChat>
+      <View style={styles.container}>
+        {/* <Text>{userId}</Text> */}
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item._id} // Adjust based on your message ID structure
+            renderItem={({ item }) => (
+              <View style={styles.messageItem}>
+                <Text style={styles.messageText}>{item.message}</Text>
+                <Text style={styles.timestampText}>
+                  {new Date(item.createdAt).toLocaleString()} {/* Format timestamp */}
+                </Text>
+              </View>
+            )}
+            getItemLayout={(data, index) => ({ length: 80, offset: 80 * index, index })} // Assumes item height is 80
+            onContentSizeChange={() => {
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
+          />
+        )}
+        <TextInput
+          placeholder="Type a message..."
+          value={newMessage}
+          onChangeText={setNewMessage}
         />
-        
-      )}
-      <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
-      <Button title="Send"  onPress={sendMessage} />
-    </View>
+        <Button title="Send" onPress={sendMessage} />
+      </View>
+    </CustomKeyboardView>
   );
 };
 
