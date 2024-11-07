@@ -3,19 +3,24 @@ import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 
+import { useAuthContext } from './context/AuthContext';
+
 export default function AuthLoadingScreen() {
   const router = useRouter();
-
+  const { setAuthUser } = useAuthContext();
   useEffect(() => {
     const checkLoginStatus = async () => {
       const token = await AsyncStorage.getItem('token');
-      if (token) {
+      const timeStamp = await AsyncStorage.getItem('timeStamp');
+      const TIME_FOR_LOGIN = 1 * 60 * 1000;
+      if (token && Date.now() - parseInt(timeStamp, 10) < TIME_FOR_LOGIN) {
         router.replace('/home/HomeScreen'); // Redirect if token exists
       } else {
         router.replace('/auth/AuthScreen'); // Redirect to Auth if no token
+        setAuthUser(null);
+        await AsyncStorage.multiRemove(['token', 'timeStamp', 'userId']);
       }
     };
-
     checkLoginStatus();
   }, []);
 
