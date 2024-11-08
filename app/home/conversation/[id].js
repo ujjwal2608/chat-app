@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, StyleSheet,Button, ActivityIndicator, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Button,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import axios from 'axios';
 import { useAuthContext } from '../../context/AuthContext';
 import { useLocalSearchParams } from 'expo-router';
@@ -9,11 +17,13 @@ const ConversationScreen = () => {
   const { socket } = useSocketContext();
   console.log(userId);
   //const { userId, userName } = route.params; // Assuming you're passing userId as a route parameter
+  const [page, setPage] = useState(2);
+
   const { authUser } = useAuthContext(); // Get the token from AuthContext
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
-
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const flatListRef = useRef(null);
   console.log('the userId is ', userId);
   useEffect(() => {
@@ -51,7 +61,8 @@ const ConversationScreen = () => {
 
       socket.on('newMessage', (newMessage) => {
         console.log(newMessage);
-        setMessages((prevMessages) => [...prevMessages, newMessage]); // Append the new message
+        setMessages((prevMessages) => [ newMessage,...prevMessages]);
+        scrollToEnd() // Append the new message
       });
 
       // Cleanup on component unmount
@@ -61,48 +72,89 @@ const ConversationScreen = () => {
     }
   }, [socket, userId, setMessages]); // Dependency array includes userId and authUser
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (flatListRef.current) {
-        flatListRef.current.scrollToEnd({ animated: true });
-      }
-    }, 100); // Add a short delay to ensure all content is rendered
+  // useEffect(() => {
+  //   const timeoutId = setTimeout(() => {
+  //     if (flatListRef.current) {
+  //       flatListRef.current.scrollToEnd({ animated: true });
+  //     }
+  //   }, 100); // Add a short delay to ensure all content is rendered
 
-    return () => clearTimeout(timeoutId);
-  }, [messages]);
+  //   return () => clearTimeout(timeoutId);
+  // }, [messages]);
 
   const sendMessage = async () => {
     const messageData = {
       senderId: authUser.userId,
       receiverId: userId,
       message: newMessage,
-    }
+    };
     try {
       // Send to backend
-      await axios.post(`https://chat-app-backend-tl4j.onrender.com/messages/${userId}`, messageData, {
-        headers: {
-          Authorization: `Bearer ${authUser.token}`,
-        },
-      });
+      await axios.post(
+        `https://chat-app-backend-tl4j.onrender.com/messages/${userId}`,
+        messageData,
+        {
+          headers: {
+            Authorization: `Bearer ${authUser.token}`,
+          },
+        }
+      );
       setNewMessage('');
-      setMessages((prevMessages) => [...prevMessages, messageData]);
+      setMessages((prevMessages) => [messageData, ...prevMessages]);
+      scrollToEnd()
     } catch (error) {
       console.error('Error sending message:', error);
     }
-   
-
-
   };
+  const addNewMessages = async () => {
+    try {
+      const response = await axios.get(
+        `https://chat-app-backend-tl4j.onrender.com/messages/${userId}?page=${page}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authUser.token}`,
+          },
+        }
+      );
 
+      if (response.data.length > 0) {
+        // Add new messages to the beginning of the current message list
+        setMessages((prevMessages) => [ ...prevMessages,...response.data]);
+        setPage((prevPage) => prevPage + 1); // Increment the page for the next request
+        setHasReachedEnd(false)
+      } else {
+        setHasReachedEnd(true); // Stop pagination if no more messages
+      }
+    } catch (error) {
+      console.error('Error fetching more messages:', error);
+    }
+  };
+  const handleEndReached = () => {
+    if (!hasReachedEnd) {
+      console.log('End reached');
+      setHasReachedEnd(true);
+      addNewMessages();
+      // You could also load more messages here if needed
+    }
+  };
+  const scrollToEnd = () => {
+    console.log("scroll to end",messages.length)
+    if (flatListRef.current && messages.length > 0) {
+      flatListRef.current.scrollToIndex({
+        animated: true,
+        index: 1, // Last index
+        viewPosition: 1, // Aligns the last item to the bottom
+      });
+    }
+  };
   return (
     <View style={styles.container}>
-      
       {/* <Text>{userId}</Text> */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
-        ref={flatListRef}
+          ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item._id} // Adjust based on your message ID structure
           renderItem={({ item }) => (
@@ -114,20 +166,20 @@ const ConversationScreen = () => {
             </View>
           )}
           getItemLayout={(data, index) => ({ length: 80, offset: 80 * index, index })} // Assumes item height is 80
-          onContentSizeChange={() => {
-            setTimeout(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
-          }}
+          // onContentSizeChange={() => {
+          //   setTimeout(scrollToEnd, 100); // Delay to allow layout to complete
+          // }}
+          inverted
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.1} // Adjust as needed
         />
-        
       )}
       <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
-      <Button title="Send"  onPress={sendMessage} />
+      <Button title="Send" onPress={sendMessage} />
     </View>
   );
 };
-
+export  default ConversationScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -148,5 +200,3 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 });
-
-export default ConversationScreen;
