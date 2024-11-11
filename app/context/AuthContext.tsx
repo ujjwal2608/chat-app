@@ -26,7 +26,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadAuthUser = async () => {
+    const checkAuth = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         const userId = await AsyncStorage.getItem('userId');
@@ -42,7 +42,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    loadAuthUser();
+    checkAuth();
   }, []);
 
   if (loading) {

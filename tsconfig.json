@@ -15,5 +15,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-, "app/context/SocketContext.js"  ]
+, "app/context/SocketContext.tsx"  ]
 }

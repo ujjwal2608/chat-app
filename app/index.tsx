@@ -13,7 +13,7 @@ export default function AuthLoadingScreen() {
       const token = await AsyncStorage.getItem('token');
       const timeStamp = await AsyncStorage.getItem('timeStamp');
       const TIME_FOR_LOGIN = 10*60 * 60 * 1000;
-      if (token && Date.now() - parseInt(timeStamp, 10) < TIME_FOR_LOGIN) {
+      if (token && timeStamp && Date.now() - parseInt(timeStamp, 10) < TIME_FOR_LOGIN) {
         router.replace('/home/HomeScreen'); // Redirect if token exists
       } else {
         router.replace('/auth/AuthScreen'); // Redirect to Auth if no token

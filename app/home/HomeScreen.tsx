@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState, useContext } from 'react';
+
 import {
   View,
   Text,
@@ -13,12 +12,14 @@ import {
 } from 'react-native';
 
 import { useAuthContext } from '../context/AuthContext';
+import { User } from '../interfaces/types';
+import { useUsers } from '../hooks/useUsersHook';
+
 
 const HomeScreen = () => {
   const { authUser, setAuthUser } = useAuthContext(); // Access token from context
   const router = useRouter();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { users, loading } = useUsers(authUser?.token || undefined);
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('token');
@@ -27,34 +28,12 @@ const HomeScreen = () => {
     router.replace('/auth/AuthScreen');
   };
 
-  const navigateToConversation = (user) => {
+  const navigateToConversation = (user: User) => {
     router.push({
       pathname: `/home/conversation/${user._id}`,
       params: { userId: user._id },
     });
   };
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (authUser?.token) {
-        try {
-          const response = await axios.get(`https://chat-app-backend-tl4j.onrender.com/users`, {
-            headers: {
-              Authorization: `Bearer ${authUser.token}`, // Send token in headers
-            },
-          });
-          setUsers(response.data);
-        } catch (error) {
-          console.error('Error fetching users:', error);
-          Alert.alert('Error', 'Failed to fetch users. Please try again later.');
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchUsers(); // Fetch users on component mount if authUser is available
-  }, [authUser?.token]);
 
   return (
     <View style={styles.container}>
