@@ -1,13 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Yup from 'yup';
-
+import { LoginValues, RegisterValues } from '../interfaces/types';
 import { useAuthContext } from '../context/AuthContext';
-const BASE_URL = 'https://chat-app-backend-tl4j.onrender.com';
+import { useLogin } from '../hooks/useLoginHook';
+import { useRegister } from '../hooks/useRegisterHook';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().when('isLogin', {
@@ -20,46 +18,25 @@ const validationSchema = Yup.object().shape({
     .required('Password is required'),
 });
 
-const AuthScreen = ({ navigation }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const router = useRouter();
-  const { setAuthUser } = useAuthContext();
-  const handleSubmit = async (values) => {
-    try {
-      const endpoint = isLogin ? '/login' : '/register';
-      const requestData = isLogin
-        ? {
-            phoneNumber: values.phoneNumber,
-            password: values.password,
-          }
-        : {
-            name: values.name,
-            phoneNumber: values.phoneNumber,
-            password: values.password,
-          };
-      console.log(`${BASE_URL}${endpoint}`);
-      const response = await axios.post(`${BASE_URL}${endpoint}`, requestData);
-      if (isLogin) {
-        // If login is successful
-        if (response.data.token) {
-          const token = response.data.token;
-          const userId = response.data.data._id;
-          const timeStamp = Date.now().toString();
 
-          console.log(token);
-          await AsyncStorage.setItem('token', token);
-          await AsyncStorage.setItem('userId', userId);
-          await AsyncStorage.setItem('timeStamp', timeStamp);
-          setAuthUser({ token, userId });
-          router.replace('/home/HomeScreen');
-        }
+const AuthScreen = ({}) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const { setAuthUser } = useAuthContext();
+  const { login } = useLogin();
+  const { register } = useRegister();
+
+  const handleSubmit = async (values: LoginValues | RegisterValues) => {
+    try {
+      if (isLogin) {
+        await login(values.phoneNumber, values.password);
       } else {
-        // Registration was successful, switch to login mode
-        Alert.alert('Success', 'Registration successful. Please log in.');
-        setIsLogin(true);
+        const success = await register(values.name, values.phoneNumber, values.password);
+        if (success) {
+          setIsLogin(true);
+        }
       }
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || console.log(error));
+      // Errors are handled within the hooks
     }
   };
 
@@ -109,7 +86,7 @@ const AuthScreen = ({ navigation }) => {
               <Text style={styles.errorText}>{errors.password}</Text>
             )}
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
               <Text style={styles.buttonText}>{isLogin ? 'Login' : 'Register'}</Text>
             </TouchableOpacity>
           </>
