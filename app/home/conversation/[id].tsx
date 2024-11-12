@@ -7,7 +7,10 @@ import {
   Button,
   ActivityIndicator,
   TextInput,
+  TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
 
 import { Message } from '../../interfaces/types';
 import { useAuthContext } from '../../context/AuthContext';
@@ -84,52 +87,71 @@ const ConversationScreen = () => {
     }
   };
 
+  const initiateCall = () => {
+    // TODO: Implement call functionality
+    console.log('Initiating call...');
+  };
+
   return (
-    <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => `${item._id}_${item.createdAt}`}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.messageItem,
-                item.receiverId._id === userId
-                  ? styles.sentMessage
-                  : styles.receivedMessage,
-              ]}>
-              <Text
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <TouchableOpacity 
+              onPress={initiateCall}
+              style={{ marginRight: 15 }}
+            >
+              <Ionicons name="call-outline" size={24} color="#007AFF" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <View style={styles.container}>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => `${item._id}_${item.createdAt}`}
+            renderItem={({ item }) => (
+              <View
                 style={[
-                  styles.messageText,
+                  styles.messageItem,
                   item.receiverId._id === userId
-                    ?styles.sentMessageText 
-                    :styles.receivedMessageText,
+                    ? styles.sentMessage
+                    : styles.receivedMessage,
                 ]}>
-                {item.message}
-              </Text>
-              <Text
-                style={[
-                  styles.timestampText,
-                  item.receiverId._id === userId
-                    ?styles.sentTimestamp 
-                    :styles.receivedTimestamp,
-                ]}>
-                {new Date(item.createdAt).toLocaleString()}
-              </Text>
-            </View>
-          )}
-          getItemLayout={(data, index) => ({ length: 80, offset: 80 * index, index })}
-          inverted
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.1}
-        />
-      )}
-      <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
-      <Button title="Send" onPress={handleSendMessage} />
-    </View>
+                <Text
+                  style={[
+                    styles.messageText,
+                    item.receiverId._id === userId
+                      ?styles.sentMessageText 
+                      :styles.receivedMessageText,
+                  ]}>
+                  {item.message}
+                </Text>
+                <Text
+                  style={[
+                    styles.timestampText,
+                    item.receiverId._id === userId
+                      ?styles.sentTimestamp 
+                      :styles.receivedTimestamp,
+                  ]}>
+                  {new Date(item.createdAt).toLocaleString()}
+                </Text>
+              </View>
+            )}
+            getItemLayout={(data, index) => ({ length: 80, offset: 80 * index, index })}
+            inverted
+            onEndReached={handleEndReached}
+            onEndReachedThreshold={0.1}
+          />
+        )}
+        <TextInput placeholder="Type a message..." value={newMessage} onChangeText={setNewMessage} />
+        <Button title="Send" onPress={handleSendMessage} />
+      </View>
+    </>
   );
 };
 export default ConversationScreen;

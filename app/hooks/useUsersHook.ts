@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User } from '../interfaces/types';
 import { Alert } from 'react-native';
+import { BASE_URL } from '../constants';
 
 export const useUsers = (authToken: string | undefined) => {
   const [users, setUsers] = useState<User[]>([]);
@@ -12,7 +13,7 @@ export const useUsers = (authToken: string | undefined) => {
       if (!authToken) return;
       
       try {
-        const response = await axios.get('https://chat-app-backend-tl4j.onrender.com/users', {
+        const response = await axios.get(`${BASE_URL}/users`, {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         setUsers(response.data);

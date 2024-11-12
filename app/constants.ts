@@ -1,1 +1,1 @@
-export const BASE_URL = 'https://chat-app-backend-tl4j.onrender.com';
+export const BASE_URL = 'http://localhost:4000';
