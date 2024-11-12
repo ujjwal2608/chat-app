@@ -97,25 +97,25 @@ const ConversationScreen = () => {
             <View
               style={[
                 styles.messageItem,
-                item.senderId._id === authUser?.userId
+                item.receiverId._id === userId
                   ? styles.sentMessage
                   : styles.receivedMessage,
               ]}>
               <Text
                 style={[
                   styles.messageText,
-                  item.senderId._id === authUser?.userId
-                    ? styles.sentMessageText
-                    : styles.receivedMessageText,
+                  item.receiverId._id === userId
+                    ?styles.sentMessageText 
+                    :styles.receivedMessageText,
                 ]}>
                 {item.message}
               </Text>
               <Text
                 style={[
                   styles.timestampText,
-                  item.senderId._id === authUser?.userId
-                    ? styles.sentTimestamp
-                    : styles.receivedTimestamp,
+                  item.receiverId._id === userId
+                    ?styles.sentTimestamp 
+                    :styles.receivedTimestamp,
                 ]}>
                 {new Date(item.createdAt).toLocaleString()}
               </Text>
