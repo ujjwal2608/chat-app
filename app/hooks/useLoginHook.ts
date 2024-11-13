@@ -27,7 +27,7 @@ export const useLogin = () => {
         await AsyncStorage.setItem('userId', userId);
         await AsyncStorage.setItem('timeStamp', timeStamp);
         setAuthUser({ token, userId });
-        router.replace('/home/HomeScreen');
+        router.replace('/(tabs)');
       }
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.message || error.message || 'An error occurred');

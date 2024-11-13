@@ -25,12 +25,12 @@ const HomeScreen = () => {
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('userId');
     setAuthUser(null); // Reset authUser in context
-    router.replace('/auth/AuthScreen');
+    router.replace('/(auth)');
   };
 
   const navigateToConversation = (user: User) => {
     router.push({
-      pathname: `/home/conversation/${user._id}`,
+      pathname: `/chat/conversation/${user._id}`,
       params: { userId: user._id },
     });
   };

@@ -14,9 +14,9 @@ export default function AuthLoadingScreen() {
       const timeStamp = await AsyncStorage.getItem('timeStamp');
       const TIME_FOR_LOGIN = 10*60 * 60 * 1000;
       if (token && timeStamp && Date.now() - parseInt(timeStamp, 10) < TIME_FOR_LOGIN) {
-        router.replace('/home/HomeScreen'); // Redirect if token exists
+        router.replace('/(tabs)'); // Redirect to main tabs screen
       } else {
-        router.replace('/auth/AuthScreen'); // Redirect to Auth if no token
+        router.replace('/(auth)'); // Redirect to Auth if no token
         setAuthUser(null);
         await AsyncStorage.multiRemove(['token', 'timeStamp', 'userId']);
       }
