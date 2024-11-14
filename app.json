@@ -29,7 +29,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ujjwal2608.chatapp"
     },
     "android": {
       "adaptiveIcon": {
