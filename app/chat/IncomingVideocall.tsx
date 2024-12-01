@@ -34,7 +34,7 @@ const IncomingCallScreen = () => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Incoming Call from {callerId || 'Unknown'}...</Text>
-      <Button title="Accept" onPress={handleAccept} />
+      <Button title="Accept call" onPress={handleAccept} />
       <Button title="Decline" onPress={handleDecline} />
     </View>
   );
